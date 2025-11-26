@@ -1,0 +1,2616 @@
+<!doctype html>
+<html lang="pl">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive Dashboard</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1d23;
+      color: #e8eaed;
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    
+    .dashboard-container {
+      width: 100%;
+      min-height: 100%;
+      background: linear-gradient(135deg, #1a1d23 0%, #252830 100%);
+      padding: 2rem;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #2d3139;
+    }
+    
+    .header-left h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #e8eaed;
+      margin-bottom: 0.25rem;
+    }
+    
+    .header-left p {
+      font-size: 0.875rem;
+      color: #9aa0a6;
+    }
+    
+    .navigation {
+      display: flex;
+      gap: 0.5rem;
+      background: #252830;
+      padding: 0.375rem;
+      border-radius: 0.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .nav-btn {
+      padding: 0.625rem 1.25rem;
+      background: transparent;
+      border: none;
+      color: #9aa0a6;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    
+    .nav-btn:hover {
+      color: #e8eaed;
+      background: #2d3139;
+    }
+    
+    .nav-btn.active {
+      background: #d4a574;
+      color: #1a1d23;
+    }
+    
+    .view-container {
+      display: none;
+    }
+    
+    .view-container.active {
+      display: block;
+    }
+    
+    .week-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      background: #252830;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+    }
+    
+    .week-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    
+    .week-label {
+      font-size: 0.75rem;
+      color: #9aa0a6;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .week-display {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #d4a574;
+    }
+    
+    .week-buttons {
+      display: flex;
+      gap: 0.75rem;
+    }
+    
+    .week-nav-btn {
+      padding: 0.625rem 1rem;
+      background: #2d3139;
+      border: none;
+      color: #e8eaed;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+    
+    .week-nav-btn:hover:not(:disabled) {
+      background: #34383f;
+    }
+    
+    .week-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    .new-week-btn {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+      color: white;
+      font-weight: 600;
+    }
+    
+    .new-week-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+      transform: translateY(-1px);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .add-member-btn, .edit-data-btn {
+      background: linear-gradient(135deg, #d4a574 0%, #c89556 100%);
+      color: #1a1d23;
+      border: none;
+      padding: 0.875rem 1.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .add-member-btn:hover, .edit-data-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 165, 116, 0.4);
+    }
+    
+    .performance-table {
+      background: #252830;
+      border-radius: 0.75rem;
+      overflow-x: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 800px;
+    }
+    
+    thead {
+      background: #2d3139;
+    }
+    
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #d4a574;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    tbody tr {
+      border-bottom: 1px solid #2d3139;
+      transition: background 0.2s;
+    }
+    
+    tbody tr:hover {
+      background: #2d3139;
+    }
+    
+    td {
+      padding: 1rem;
+      font-size: 0.9375rem;
+      color: #e8eaed;
+    }
+    
+    .editable-cell {
+      cursor: pointer;
+      position: relative;
+      padding: 0.5rem;
+    }
+    
+    .editable-cell:hover {
+      background: rgba(212, 165, 116, 0.1);
+      border-radius: 0.25rem;
+    }
+    
+    .editable-cell input {
+      width: 60px;
+      padding: 0.375rem;
+      background: #1a1d23;
+      border: 2px solid #d4a574;
+      border-radius: 0.25rem;
+      color: #e8eaed;
+      font-size: 0.9375rem;
+      text-align: center;
+    }
+    
+    .role-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .role-ns {
+      background: rgba(156, 39, 176, 0.2);
+      color: #9c27b0;
+      border: 1px solid rgba(156, 39, 176, 0.3);
+    }
+    
+    .role-brand-ambassador {
+      background: rgba(233, 30, 99, 0.2);
+      color: #e91e63;
+      border: 1px solid rgba(233, 30, 99, 0.3);
+    }
+    
+    .role-leader {
+      background: rgba(212, 165, 116, 0.2);
+      color: #d4a574;
+      border: 1px solid rgba(212, 165, 116, 0.3);
+    }
+    
+    .role-crew-leader {
+      background: rgba(3, 169, 244, 0.2);
+      color: #03a9f4;
+      border: 1px solid rgba(3, 169, 244, 0.3);
+    }
+    
+    .role-assistant {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .metric-value {
+      font-weight: 600;
+    }
+    
+    .metric-avg {
+      color: #d4a574;
+    }
+    
+    .delete-btn {
+      background: rgba(244, 67, 54, 0.15);
+      color: #f44336;
+      border: none;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.375rem;
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .delete-btn:hover {
+      background: rgba(244, 67, 54, 0.25);
+    }
+    
+    .org-chart {
+      padding: 2rem;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    
+    .tree-level {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+    
+    .tree-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    
+    .tree-node.root {
+      margin-top: 0;
+    }
+    
+    .tree-children {
+      display: flex;
+      gap: 2rem;
+      margin-top: 3rem;
+      position: relative;
+    }
+    
+    .tree-children::before {
+      content: '';
+      position: absolute;
+      top: -2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 2rem;
+      background: #3d4149;
+    }
+    
+    .tree-children .tree-node::before {
+      content: '';
+      position: absolute;
+      top: -2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 2rem;
+      background: #3d4149;
+    }
+    
+    .tree-children > .tree-node:not(:only-child)::after {
+      content: '';
+      position: absolute;
+      top: -2rem;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #3d4149;
+    }
+    
+    .tree-children > .tree-node:first-child::after {
+      left: 50%;
+    }
+    
+    .tree-children > .tree-node:last-child::after {
+      right: 50%;
+    }
+    
+    .member-card {
+      background: #252830;
+      border-radius: 0.5rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      min-width: 300px;
+      max-width: 400px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: all 0.2s;
+    }
+    
+    .member-card {
+      cursor: pointer;
+    }
+    
+    .member-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+    
+    .member-card.level-ns {
+      border-left: 4px solid #9c27b0;
+      background: linear-gradient(135deg, #252830 0%, #2d2139 100%);
+    }
+    
+    .member-card.level-brand-ambassador {
+      border-left: 4px solid #e91e63;
+      background: linear-gradient(135deg, #252830 0%, #2d1f26 100%);
+    }
+    
+    .member-card.level-leader {
+      border-left: 4px solid #d4a574;
+      background: linear-gradient(135deg, #252830 0%, #2d2720 100%);
+    }
+    
+    .member-card.level-crew-leader {
+      border-left: 4px solid #03a9f4;
+      background: linear-gradient(135deg, #252830 0%, #1f2730 100%);
+    }
+    
+    .member-card.level-assistant {
+      border-left: 4px solid #4caf50;
+      background: linear-gradient(135deg, #252830 0%, #202d21 100%);
+    }
+    
+    .member-name {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #e8eaed;
+      margin-bottom: 0.5rem;
+    }
+    
+    .member-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .subordinates-container {
+      margin-top: 0.5rem;
+    }
+    
+    .chart-container {
+      background: #252830;
+      border-radius: 0.75rem;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #d4a574;
+      margin-bottom: 1.5rem;
+    }
+    
+    .chart {
+      height: 300px;
+      display: flex;
+      align-items: flex-end;
+      gap: 1rem;
+      padding: 1rem 0;
+    }
+    
+    .bar {
+      flex: 1;
+      background: linear-gradient(180deg, #d4a574 0%, #c89556 100%);
+      border-radius: 0.375rem 0.375rem 0 0;
+      position: relative;
+      min-height: 20px;
+      transition: all 0.3s;
+    }
+    
+    .bar:hover {
+      filter: brightness(1.2);
+    }
+    
+    .bar-label {
+      position: absolute;
+      bottom: -1.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: #9aa0a6;
+      white-space: nowrap;
+    }
+    
+    .bar-value {
+      position: absolute;
+      top: -1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #d4a574;
+    }
+    
+    .line-chart-container {
+      position: relative;
+      height: 300px;
+      padding: 2rem 1rem 3rem 3rem;
+    }
+    
+    .line-chart-svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    .chart-line {
+      fill: none;
+      stroke: #d4a574;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    
+    .chart-point {
+      fill: #d4a574;
+      stroke: #252830;
+      stroke-width: 2;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .chart-point:hover {
+      fill: #e8b589;
+      r: 6;
+    }
+    
+    .chart-grid-line {
+      stroke: #2d3139;
+      stroke-width: 1;
+      stroke-dasharray: 4 4;
+    }
+    
+    .chart-axis-line {
+      stroke: #3d4149;
+      stroke-width: 2;
+    }
+    
+    .chart-label {
+      fill: #9aa0a6;
+      font-size: 0.75rem;
+      text-anchor: middle;
+    }
+    
+    .chart-value-label {
+      fill: #9aa0a6;
+      font-size: 0.75rem;
+      text-anchor: end;
+    }
+    
+    .chart-tooltip {
+      position: absolute;
+      background: #1a1d23;
+      border: 1px solid #d4a574;
+      border-radius: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      color: #e8eaed;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 10;
+      white-space: nowrap;
+    }
+    
+    .chart-tooltip.visible {
+      opacity: 1;
+    }
+    
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #1a1d23;
+      border-radius: 0.5rem;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: #9aa0a6;
+    }
+    
+    .legend-line {
+      width: 24px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    
+    .structure-history-section {
+      margin-bottom: 2rem;
+    }
+    
+    .history-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .history-item {
+      background: #2d3139;
+      border-left: 4px solid #d4a574;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s;
+    }
+    
+    .history-item:hover {
+      background: #34383f;
+    }
+    
+    .history-date {
+      font-size: 0.75rem;
+      color: #9aa0a6;
+      margin-bottom: 0.5rem;
+    }
+    
+    .history-action {
+      font-size: 0.9375rem;
+      color: #e8eaed;
+      font-weight: 600;
+    }
+    
+    .history-details {
+      font-size: 0.875rem;
+      color: #9aa0a6;
+      margin-top: 0.25rem;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: #252830;
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border-left: 4px solid #d4a574;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #9aa0a6;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #d4a574;
+    }
+    
+    .rq-table {
+      background: #252830;
+      border-radius: 0.75rem;
+      overflow-x: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      margin-bottom: 2rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: #252830;
+      border-radius: 0.75rem;
+      padding: 2rem;
+      max-width: 500px;
+      width: 100%;
+      max-height: 90%;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+    
+    .modal-header {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: #d4a574;
+      margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+    
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #9aa0a6;
+      margin-bottom: 0.5rem;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 0.75rem;
+      background: #1a1d23;
+      border: 1px solid #2d3139;
+      border-radius: 0.5rem;
+      color: #e8eaed;
+      font-size: 0.9375rem;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #d4a574;
+    }
+    
+    .days-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    
+    .day-input {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #d4a574 0%, #c89556 100%);
+      color: #1a1d23;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(212, 165, 116, 0.4);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-secondary {
+      background: #2d3139;
+      color: #e8eaed;
+    }
+    
+    .btn-secondary:hover {
+      background: #34383f;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: #9aa0a6;
+    }
+    
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 1.5rem;
+      opacity: 0.5;
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #1a1d23;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      background: #2d3139;
+      color: #e8eaed;
+      padding: 1rem 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      animation: slideIn 0.3s ease;
+      max-width: 90%;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .dashboard-container {
+        padding: 1rem;
+      }
+      
+      .header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+      }
+      
+      .header-left h1 {
+        font-size: 1.5rem;
+      }
+      
+      .header-left p {
+        font-size: 0.8125rem;
+      }
+      
+      .navigation {
+        width: 100%;
+        flex-direction: column;
+        padding: 0.5rem;
+      }
+      
+      .nav-btn {
+        width: 100%;
+        text-align: center;
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+      }
+      
+      .week-controls {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+      }
+      
+      .week-info {
+        width: 100%;
+        text-align: center;
+      }
+      
+      .week-display {
+        font-size: 1.125rem;
+      }
+      
+      .week-buttons {
+        flex-direction: column;
+        width: 100%;
+        gap: 0.5rem;
+      }
+      
+      .week-nav-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem;
+      }
+      
+      .new-week-btn {
+        font-size: 0.8125rem;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .add-member-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+      }
+      
+      .performance-table, .rq-table {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 0.5rem;
+      }
+      
+      table {
+        min-width: 700px;
+        font-size: 0.75rem;
+      }
+      
+      th, td {
+        padding: 0.625rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      
+      .role-badge {
+        font-size: 0.625rem;
+        padding: 0.2rem 0.5rem;
+      }
+      
+      .editable-cell input {
+        width: 50px;
+        font-size: 0.8125rem;
+        padding: 0.25rem;
+      }
+      
+      .delete-btn {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      
+      .org-chart {
+        padding: 1rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .tree-children {
+        gap: 1rem;
+      }
+      
+      .member-card {
+        min-width: 220px;
+        max-width: 280px;
+        padding: 0.875rem 1rem;
+      }
+      
+      .member-name {
+        font-size: 0.9375rem;
+      }
+      
+      .chart-container {
+        padding: 1rem;
+      }
+      
+      .chart-title {
+        font-size: 1rem;
+      }
+      
+      .chart {
+        height: 200px;
+      }
+      
+      .line-chart-container {
+        height: 250px;
+        padding: 1.5rem 0.5rem 2rem 2rem;
+      }
+      
+      .bar-label {
+        font-size: 0.625rem;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .stat-card {
+        padding: 1rem;
+      }
+      
+      .stat-value {
+        font-size: 1.5rem;
+      }
+      
+      .history-item {
+        padding: 0.875rem 1rem;
+      }
+      
+      .history-action {
+        font-size: 0.875rem;
+      }
+      
+      .history-details {
+        font-size: 0.8125rem;
+      }
+      
+      .modal {
+        padding: 0.5rem;
+      }
+      
+      .modal-content {
+        width: 100%;
+        padding: 1.5rem 1rem;
+        max-height: 90%;
+      }
+      
+      .modal-header {
+        font-size: 1.125rem;
+      }
+      
+      input, select {
+        font-size: 0.875rem;
+        padding: 0.625rem;
+      }
+      
+      .modal-actions {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+      
+      .notification {
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: calc(100% - 2rem);
+        font-size: 0.875rem;
+        padding: 0.875rem 1rem;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="dashboard-container">
+   <header class="header">
+    <div class="header-left">
+     <h1 id="dashboard-title">Executive Performance Dashboard</h1>
+     <p id="company-name">BEARS</p>
+    </div>
+    <nav class="navigation"><button class="nav-btn active" data-view="current-week">Bieżący Tydzień</button> <button class="nav-btn" data-view="team-structure">Struktura Zespołu</button> <button class="nav-btn" data-view="rq-stats">Statystyki RQ</button> <button class="nav-btn" data-view="history">Historia Wyników</button>
+    </nav>
+   </header>
+   <div id="current-week" class="view-container active">
+    <div class="week-controls">
+     <div class="week-info"><span class="week-label">Aktualny tydzień</span> <span class="week-display" id="current-week-display">Tydzień 1, 2024</span>
+     </div>
+     <div class="week-buttons"><button class="week-nav-btn" id="prev-week-btn"> ← Poprzedni </button> <button class="week-nav-btn" id="next-week-btn" disabled> Następny → </button> <button class="week-nav-btn new-week-btn" id="new-week-btn"> ✓ Zakończ Tydzień &amp; Nowy </button>
+     </div>
+    </div>
+    <div class="action-buttons"><button class="add-member-btn" id="add-member-btn"> <span>+</span> <span>DODAJ CZŁONKA ZESPOŁU</span> </button>
+    </div>
+    <div class="performance-table">
+     <table>
+      <thead>
+       <tr>
+        <th>Imię i Nazwisko</th>
+        <th>Rola</th>
+        <th>Cel</th>
+        <th>Pon</th>
+        <th>Wt</th>
+        <th>Śr</th>
+        <th>Czw</th>
+        <th>Pt</th>
+        <th>Sob</th>
+        <th>Suma</th>
+        <th>Akcje</th>
+       </tr>
+      </thead>
+      <tbody id="performance-tbody">
+      </tbody>
+     </table>
+    </div>
+   </div>
+   <div id="team-structure" class="view-container">
+    <div class="structure-history-section">
+     <div class="chart-container">
+      <h3 class="chart-title">Historia Zmian Struktury Zespołu</h3>
+      <div class="history-timeline" id="structure-history">
+      </div>
+     </div>
+    </div>
+    <div class="chart-container">
+     <h3 class="chart-title">Aktualna Struktura Zespołu</h3>
+     <div id="org-chart" class="org-chart">
+     </div>
+    </div>
+   </div>
+   <div id="rq-stats" class="view-container">
+    <div class="stats-grid" id="rq-stats-grid">
+    </div>
+    <div class="action-buttons"><button class="add-member-btn" id="save-rq-btn"> <span>💾</span> <span>ZAPISZ STATYSTYKI RQ</span> </button>
+    </div>
+    <div class="chart-container">
+     <h3 class="chart-title">RQ Tygodniowe - Kto Wziął i Ile</h3>
+     <div class="rq-table">
+      <table>
+       <thead>
+        <tr>
+         <th>Imię i Nazwisko</th>
+         <th>Rola</th>
+         <th>Pon</th>
+         <th>Wt</th>
+         <th>Śr</th>
+         <th>Czw</th>
+         <th>Pt</th>
+         <th>Uwagi</th>
+        </tr>
+       </thead>
+       <tbody id="rq-tbody">
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="chart-container">
+     <h3 class="chart-title">Trend RQ w Czasie (Top 5)</h3>
+     <div class="line-chart-container" id="rq-trend-chart">
+      <svg class="line-chart-svg" id="rq-trend-svg"></svg>
+      <div class="chart-tooltip" id="rq-tooltip"></div>
+     </div>
+     <div class="chart-legend" id="rq-legend"></div>
+    </div>
+   </div>
+   <div id="history" class="view-container">
+    <div class="chart-container">
+     <h3 class="chart-title">Porównanie Tygodni</h3>
+     <div class="line-chart-container" id="weeks-comparison-chart">
+      <svg class="line-chart-svg" id="weeks-svg"></svg>
+      <div class="chart-tooltip" id="weeks-tooltip"></div>
+     </div>
+    </div>
+    <div class="chart-container">
+     <h3 class="chart-title">Trend Wydajności Członków Zespołu (Top 5)</h3>
+     <div class="line-chart-container" id="members-history-chart">
+      <svg class="line-chart-svg" id="members-svg"></svg>
+      <div class="chart-tooltip" id="members-tooltip"></div>
+     </div>
+     <div class="chart-legend" id="members-legend"></div>
+    </div>
+   </div>
+  </div>
+  <div class="modal" id="add-member-modal">
+   <div class="modal-content">
+    <h2 class="modal-header">Dodaj Członka Zespołu</h2>
+    <form id="add-member-form">
+     <div class="form-group"><label for="member-name">Imię i Nazwisko</label> <input type="text" id="member-name" required>
+     </div>
+     <div class="form-group"><label for="member-role">Rola</label> <select id="member-role" required> <option value="NS">NS (Network Supervisor)</option> <option value="Brand Ambassador">Brand Ambassador</option> <option value="Leader">Leader</option> <option value="Crew Leader">Crew Leader</option> <option value="Assistant">Assistant</option> </select>
+     </div>
+     <div class="form-group" id="superior-select-group"><label for="superior-select">Przypisz do Przełożonego</label> <select id="superior-select"> <option value="">Brak (Top Level)</option> </select>
+     </div>
+     <div class="modal-actions"><button type="button" class="btn btn-secondary" id="cancel-btn">Anuluj</button> <button type="submit" class="btn btn-primary" id="submit-btn">Dodaj</button>
+     </div>
+    </form>
+   </div>
+  </div>
+  <div class="modal" id="member-stats-modal">
+   <div class="modal-content" style="max-width: 1000px;">
+    <h2 class="modal-header" id="stats-member-name">Statystyki Członka</h2>
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+     <div class="stat-card">
+      <div class="stat-label">
+       Rola
+      </div>
+      <div class="stat-value" style="font-size: 1.25rem;" id="stats-role">
+       -
+      </div>
+     </div>
+     <div class="stat-card">
+      <div class="stat-label">
+       Łącznie Zatrudnionych
+      </div>
+      <div class="stat-value" id="stats-total-zatrudnieni">
+       0
+      </div>
+     </div>
+     <div class="stat-card">
+      <div class="stat-label">
+       Łącznie RQ Wziętych
+      </div>
+      <div class="stat-value" id="stats-total-rq">
+       0
+      </div>
+     </div>
+     <div class="stat-card">
+      <div class="stat-label">
+       Liczba Tygodni
+      </div>
+      <div class="stat-value" id="stats-weeks-count">
+       0
+      </div>
+     </div>
+    </div>
+    <div class="week-controls" style="margin-bottom: 1.5rem;">
+     <div class="week-info"><span class="week-label">Wyświetlany tydzień</span> <span class="week-display" id="stats-week-display">Tydzień 1, 2024</span>
+     </div>
+     <div class="week-buttons"><button class="week-nav-btn" id="stats-prev-week-btn"> ← Poprzedni </button> <button class="week-nav-btn" id="stats-next-week-btn"> Następny → </button>
+     </div>
+    </div>
+    <div style="margin-bottom: 1.5rem;">
+     <h3 class="chart-title">Tabelka Sprzedażowa</h3>
+     <div class="performance-table">
+      <table>
+       <thead>
+        <tr>
+         <th>Cel</th>
+         <th>Pon</th>
+         <th>Wt</th>
+         <th>Śr</th>
+         <th>Czw</th>
+         <th>Pt</th>
+         <th>Sob</th>
+         <th>Suma</th>
+        </tr>
+       </thead>
+       <tbody id="stats-performance-tbody">
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div style="margin-bottom: 1.5rem;">
+     <h3 class="chart-title">Tabelka RQ</h3>
+     <div class="rq-table">
+      <table>
+       <thead>
+        <tr>
+         <th>Pon</th>
+         <th>Wt</th>
+         <th>Śr</th>
+         <th>Czw</th>
+         <th>Pt</th>
+         <th>Uwagi</th>
+        </tr>
+       </thead>
+       <tbody id="stats-rq-tbody">
+       </tbody>
+      </table>
+     </div>
+    </div>
+    <div class="modal-actions"><button type="button" class="btn btn-secondary" id="close-stats-btn">Zamknij</button>
+    </div>
+   </div>
+  </div>
+  <script>
+    let allRecords = [];
+    let teamMembers = [];
+    let currentWeekData = [];
+    let structureHistory = [];
+    let currentRecordCount = 0;
+    let currentWeek = null;
+    let allWeeks = [];
+    const MAX_RECORDS = 999;
+    
+    const defaultConfig = {
+      dashboard_title: 'Executive Performance Dashboard',
+      company_name: 'BEARS',
+      background_color: '#1a1d23',
+      surface_color: '#252830',
+      text_color: '#e8eaed',
+      primary_action_color: '#d4a574',
+      secondary_action_color: '#9aa0a6'
+    };
+    
+    function getWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+      return weekNo;
+    }
+    
+    function getWeekStart(date) {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(d.setDate(diff));
+      monday.setHours(0, 0, 0, 0);
+      return monday.toISOString();
+    }
+    
+    function getCurrentWeekInfo() {
+      const now = new Date();
+      return {
+        weekStart: getWeekStart(now),
+        weekNumber: getWeekNumber(now),
+        year: now.getFullYear()
+      };
+    }
+    
+    const dataHandler = {
+      onDataChanged(data) {
+        allRecords = data;
+        currentRecordCount = data.length;
+        
+        teamMembers = data.filter(r => r.type === 'member');
+        structureHistory = data.filter(r => r.type === 'structure_change').sort((a, b) => 
+          new Date(b.timestamp) - new Date(a.timestamp)
+        );
+        
+        const weekData = data.filter(r => r.type === 'week_data');
+        allWeeks = [...new Set(weekData.map(w => `${w.year}-W${w.week_number}`))].sort().reverse();
+        
+        if (currentWeek === null && allWeeks.length > 0) {
+          currentWeek = allWeeks[0];
+        } else if (currentWeek === null) {
+          const weekInfo = getCurrentWeekInfo();
+          currentWeek = `${weekInfo.year}-W${weekInfo.weekNumber}`;
+        }
+        
+        currentWeekData = weekData.filter(w => `${w.year}-W${w.week_number}` === currentWeek);
+        
+        updateWeekDisplay();
+        renderPerformanceTable();
+        renderOrgChart();
+        renderStructureHistory();
+        renderRQStats();
+        renderHistoryCharts();
+      }
+    };
+    
+    async function initializeApp() {
+      const initResult = await window.dataSdk.init(dataHandler);
+      if (!initResult.isOk) {
+        console.error('Failed to initialize Data SDK');
+      }
+      
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            document.getElementById('dashboard-title').textContent = config.dashboard_title || defaultConfig.dashboard_title;
+            document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
+            
+            document.body.style.background = config.background_color || defaultConfig.background_color;
+            document.querySelector('.dashboard-container').style.background = `linear-gradient(135deg, ${config.background_color || defaultConfig.background_color} 0%, ${config.surface_color || defaultConfig.surface_color} 100%)`;
+            
+            const surfaceElements = document.querySelectorAll('.performance-table, .chart-container, .modal-content, .week-controls, .rq-table');
+            surfaceElements.forEach(el => el.style.background = config.surface_color || defaultConfig.surface_color);
+            
+            document.body.style.color = config.text_color || defaultConfig.text_color;
+            
+            const primaryButtons = document.querySelectorAll('.add-member-btn, .btn-primary, .nav-btn.active');
+            primaryButtons.forEach(btn => {
+              btn.style.background = `linear-gradient(135deg, ${config.primary_action_color || defaultConfig.primary_action_color} 0%, ${config.primary_action_color || defaultConfig.primary_action_color} 100%)`;
+            });
+          },
+          mapToCapabilities: (config) => ({
+            recolorables: [
+              {
+                get: () => config.background_color || defaultConfig.background_color,
+                set: (value) => {
+                  if (window.elementSdk) {
+                    window.elementSdk.config.background_color = value;
+                    window.elementSdk.setConfig({ background_color: value });
+                  }
+                }
+              },
+              {
+                get: () => config.surface_color || defaultConfig.surface_color,
+                set: (value) => {
+                  if (window.elementSdk) {
+                    window.elementSdk.config.surface_color = value;
+                    window.elementSdk.setConfig({ surface_color: value });
+                  }
+                }
+              },
+              {
+                get: () => config.text_color || defaultConfig.text_color,
+                set: (value) => {
+                  if (window.elementSdk) {
+                    window.elementSdk.config.text_color = value;
+                    window.elementSdk.setConfig({ text_color: value });
+                  }
+                }
+              },
+              {
+                get: () => config.primary_action_color || defaultConfig.primary_action_color,
+                set: (value) => {
+                  if (window.elementSdk) {
+                    window.elementSdk.config.primary_action_color = value;
+                    window.elementSdk.setConfig({ primary_action_color: value });
+                  }
+                }
+              },
+              {
+                get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+                set: (value) => {
+                  if (window.elementSdk) {
+                    window.elementSdk.config.secondary_action_color = value;
+                    window.elementSdk.setConfig({ secondary_action_color: value });
+                  }
+                }
+              }
+            ],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['dashboard_title', config.dashboard_title || defaultConfig.dashboard_title],
+            ['company_name', config.company_name || defaultConfig.company_name]
+          ])
+        });
+      }
+    }
+    
+    function updateWeekDisplay() {
+      if (!currentWeek) return;
+      
+      const [year, weekPart] = currentWeek.split('-W');
+      const weekNumber = parseInt(weekPart);
+      
+      // Znajdź dowolny rekord week_data dla tego tygodnia, aby pobrać week_start
+      const weekData = allRecords.find(r => 
+        r.type === 'week_data' && 
+        r.year === parseInt(year) && 
+        r.week_number === weekNumber
+      );
+      
+      if (weekData && weekData.week_start) {
+        const start = new Date(weekData.week_start);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 5); // Poniedziałek do Soboty
+        
+        const formatDate = (date) => {
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          return `${day}.${month}`;
+        };
+        
+        document.getElementById('current-week-display').textContent = `${formatDate(start)} - ${formatDate(end)}`;
+      } else {
+        // Fallback jeśli nie ma week_start
+        document.getElementById('current-week-display').textContent = `Tydzień ${weekNumber}, ${year}`;
+      }
+      
+      const currentIndex = allWeeks.indexOf(currentWeek);
+      document.getElementById('prev-week-btn').disabled = currentIndex === allWeeks.length - 1;
+      document.getElementById('next-week-btn').disabled = currentIndex === 0;
+    }
+    
+    function calculateAverage(member) {
+      const zatrudnieni = [member.monday || 0, member.tuesday || 0, member.wednesday || 0, member.thursday || 0, member.friday || 0, member.saturday || 0].reduce((a, b) => a + b, 0);
+      const rekrutacje = member.goal || 1;
+      return ((zatrudnieni / rekrutacje) * 100).toFixed(1);
+    }
+    
+    function renderPerformanceTable() {
+      const tbody = document.getElementById('performance-tbody');
+      
+      if (teamMembers.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="12" class="empty-state">
+              <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+              <p>Brak członków zespołu. Kliknij przycisk powyżej, aby dodać pierwszego członka.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      tbody.innerHTML = teamMembers.map(member => {
+        const weekData = currentWeekData.find(w => w.id === member.id) || {
+          monday: 0, tuesday: 0, wednesday: 0, thursday: 0, friday: 0, saturday: 0, goal: 0
+        };
+        
+        const roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
+        const suma = (weekData.monday || 0) + (weekData.tuesday || 0) + (weekData.wednesday || 0) + (weekData.thursday || 0) + (weekData.friday || 0) + (weekData.saturday || 0);
+        
+        return `
+          <tr>
+            <td>${member.name}</td>
+            <td><span class="role-badge role-${roleClass}">${member.role}</span></td>
+            <td class="editable-cell" data-member="${member.id}" data-day="goal">${weekData.goal || 0}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="monday">${weekData.monday || 0}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="tuesday">${weekData.tuesday || 0}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="wednesday">${weekData.wednesday || 0}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="thursday">${weekData.thursday || 0}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="friday">${weekData.friday || 0}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="saturday">${weekData.saturday || 0}</td>
+            <td class="metric-value">${suma}</td>
+            <td><button class="delete-btn" data-id="${member.__backendId}">Usuń</button></td>
+          </tr>
+        `;
+      }).join('');
+      
+      document.querySelectorAll('.editable-cell').forEach(cell => {
+        cell.addEventListener('click', handleCellEdit);
+      });
+      
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', handleDelete);
+      });
+    }
+    
+    async function handleCellEdit(e) {
+      const cell = e.currentTarget;
+      const memberId = cell.dataset.member;
+      const day = cell.dataset.day;
+      const currentValue = parseInt(cell.textContent) || 0;
+      
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.min = '0';
+      input.value = currentValue;
+      input.style.width = '60px';
+      
+      cell.textContent = '';
+      cell.appendChild(input);
+      input.focus();
+      input.select();
+      
+      async function saveValue() {
+        const newValue = parseInt(input.value) || 0;
+        
+        if (newValue !== currentValue) {
+          const [year, weekPart] = currentWeek.split('-W');
+          const weekNumber = parseInt(weekPart);
+          
+          let weekStart = '';
+          const existingWeekData = allRecords.find(r => 
+            r.type === 'week_data' && 
+            r.year === parseInt(year) && 
+            r.week_number === weekNumber
+          );
+          
+          if (existingWeekData && existingWeekData.week_start) {
+            weekStart = existingWeekData.week_start;
+          } else {
+            weekStart = getWeekStart(new Date());
+          }
+          
+          let weekDataRecord = currentWeekData.find(w => w.id === memberId);
+          
+          if (weekDataRecord) {
+            weekDataRecord[day] = newValue;
+            await window.dataSdk.update(weekDataRecord);
+          } else {
+            const member = teamMembers.find(m => m.id === memberId);
+            const newRecord = {
+              id: memberId,
+              type: 'week_data',
+              name: member.name,
+              role: member.role,
+              leader_id: member.leader_id || '',
+              week_start: weekStart,
+              week_number: weekNumber,
+              year: parseInt(year),
+              goal: 0,
+              monday: day === 'monday' ? newValue : 0,
+              tuesday: day === 'tuesday' ? newValue : 0,
+              wednesday: day === 'wednesday' ? newValue : 0,
+              thursday: day === 'thursday' ? newValue : 0,
+              friday: day === 'friday' ? newValue : 0,
+              saturday: day === 'saturday' ? newValue : 0,
+              rq_monday: '',
+              rq_tuesday: '',
+              rq_wednesday: '',
+              rq_thursday: '',
+              rq_friday: '',
+              rq_notes: '',
+              created_at: new Date().toISOString()
+            };
+            await window.dataSdk.create(newRecord);
+          }
+        } else {
+          cell.textContent = currentValue;
+        }
+      }
+      
+      input.addEventListener('blur', saveValue);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          input.blur();
+        }
+      });
+    }
+    
+    async function handleRQCellEdit(e) {
+      const cell = e.currentTarget;
+      const memberId = cell.dataset.member;
+      const day = cell.dataset.day;
+      const currentValue = cell.textContent.trim() === '-' ? '' : cell.textContent.trim();
+      
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.value = currentValue;
+      input.style.width = day === 'rq_notes' ? '100%' : '100px';
+      input.style.padding = '0.375rem';
+      input.style.background = '#1a1d23';
+      input.style.border = '2px solid #d4a574';
+      input.style.borderRadius = '0.25rem';
+      input.style.color = '#e8eaed';
+      input.style.fontSize = '0.9375rem';
+      
+      cell.textContent = '';
+      cell.appendChild(input);
+      input.focus();
+      input.select();
+      
+      async function saveValue() {
+        const newValue = input.value.trim();
+        
+        if (newValue !== currentValue) {
+          const [year, weekPart] = currentWeek.split('-W');
+          const weekNumber = parseInt(weekPart);
+          const weekStart = getWeekStart(new Date());
+          
+          let weekDataRecord = currentWeekData.find(w => w.id === memberId);
+          
+          if (weekDataRecord) {
+            weekDataRecord[day] = newValue;
+            await window.dataSdk.update(weekDataRecord);
+          } else {
+            const member = teamMembers.find(m => m.id === memberId);
+            const newRecord = {
+              id: memberId,
+              type: 'week_data',
+              name: member.name,
+              role: member.role,
+              leader_id: member.leader_id || '',
+              week_start: weekStart,
+              week_number: weekNumber,
+              year: parseInt(year),
+              goal: 0,
+              monday: 0,
+              tuesday: 0,
+              wednesday: 0,
+              thursday: 0,
+              friday: 0,
+              saturday: 0,
+              rq_monday: day === 'rq_monday' ? newValue : '',
+              rq_tuesday: day === 'rq_tuesday' ? newValue : '',
+              rq_wednesday: day === 'rq_wednesday' ? newValue : '',
+              rq_thursday: day === 'rq_thursday' ? newValue : '',
+              rq_friday: day === 'rq_friday' ? newValue : '',
+              rq_notes: day === 'rq_notes' ? newValue : '',
+              created_at: new Date().toISOString()
+            };
+            await window.dataSdk.create(newRecord);
+          }
+        }
+      }
+      
+      input.addEventListener('blur', saveValue);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          input.blur();
+        }
+      });
+    }
+    
+    function renderStructureHistory() {
+      const historyContainer = document.getElementById('structure-history');
+      
+      if (structureHistory.length === 0) {
+        historyContainer.innerHTML = `
+          <div class="empty-state">
+            <p>Brak zmian w strukturze zespołu.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      historyContainer.innerHTML = structureHistory.map(change => {
+        const date = new Date(change.timestamp);
+        const formattedDate = `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        
+        return `
+          <div class="history-item">
+            <div class="history-date">${formattedDate}</div>
+            <div class="history-action">${change.action}</div>
+            <div class="history-details">${change.details}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function renderOrgChart() {
+      const orgChart = document.getElementById('org-chart');
+      
+      if (teamMembers.length === 0) {
+        orgChart.innerHTML = `
+          <div class="empty-state">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+            <p>Brak struktury zespołu do wyświetlenia.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      function getRoleClass(role) {
+        return role.toLowerCase().replace(/\s+/g, '-');
+      }
+      
+      function getSubordinateCount(memberId) {
+        let count = 0;
+        const directSubordinates = teamMembers.filter(m => m.leader_id === memberId);
+        
+        directSubordinates.forEach(sub => {
+          count += 1;
+          count += getSubordinateCount(sub.id);
+        });
+        
+        return count;
+      }
+      
+      function buildTree(parentId = '', isRoot = true) {
+        const children = teamMembers.filter(m => m.leader_id === parentId);
+        
+        if (children.length === 0) return '';
+        
+        return `<div class="tree-children">` + children.map(member => {
+          const subordinates = buildTree(member.id, false);
+          const roleClass = getRoleClass(member.role);
+          const subCount = getSubordinateCount(member.id);
+          
+          return `
+            <div class="tree-node ${isRoot ? 'root' : ''}">
+              <div class="member-card level-${roleClass}" onclick="openMemberStats('${member.id}')">
+                <div class="member-name">${member.name}</div>
+                <div class="member-info">
+                  <span class="role-badge role-${roleClass}">${member.role}</span>
+                  ${subCount > 0 ? `<span style="color: #9aa0a6; font-size: 0.8125rem;">👥 ${subCount}</span>` : ''}
+                </div>
+              </div>
+              ${subordinates}
+            </div>
+          `;
+        }).join('') + `</div>`;
+      }
+      
+      const rootMembers = teamMembers.filter(m => !m.leader_id);
+      
+      if (rootMembers.length === 0) {
+        orgChart.innerHTML = `
+          <div class="empty-state">
+            <p style="color: #9aa0a6;">Wszyscy członkowie są przypisani do kogoś. Dodaj osobę na najwyższym poziomie.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      orgChart.innerHTML = `<div class="tree-level">${buildTree('', true)}</div>`;
+    }
+    
+    function calculateRQ(weekData) {
+      const zatrudnieni = [weekData.monday || 0, weekData.tuesday || 0, weekData.wednesday || 0, weekData.thursday || 0, weekData.friday || 0, weekData.saturday || 0].reduce((a, b) => a + b, 0);
+      const rekrutacje = weekData.goal || 1;
+      return ((zatrudnieni / rekrutacje) * 100).toFixed(1);
+    }
+    
+    function renderRQStats() {
+      const statsGrid = document.getElementById('rq-stats-grid');
+      const tbody = document.getElementById('rq-tbody');
+      
+      if (teamMembers.length === 0 || allWeeks.length === 0) {
+        statsGrid.innerHTML = '<div class="empty-state"><p>Brak danych do wyświetlenia statystyk RQ.</p></div>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Brak danych.</p></td></tr>';
+        return;
+      }
+      
+      const allWeekData = allRecords.filter(r => r.type === 'week_data');
+      
+      const totalRQCount = allWeekData.reduce((sum, w) => {
+        let count = 0;
+        if (w.rq_monday) count += parseInt(w.rq_monday) || 0;
+        if (w.rq_tuesday) count += parseInt(w.rq_tuesday) || 0;
+        if (w.rq_wednesday) count += parseInt(w.rq_wednesday) || 0;
+        if (w.rq_thursday) count += parseInt(w.rq_thursday) || 0;
+        if (w.rq_friday) count += parseInt(w.rq_friday) || 0;
+        return sum + count;
+      }, 0);
+      
+      const currentWeekRQCount = currentWeekData.reduce((sum, w) => {
+        let count = 0;
+        if (w.rq_monday) count += parseInt(w.rq_monday) || 0;
+        if (w.rq_tuesday) count += parseInt(w.rq_tuesday) || 0;
+        if (w.rq_wednesday) count += parseInt(w.rq_wednesday) || 0;
+        if (w.rq_thursday) count += parseInt(w.rq_thursday) || 0;
+        if (w.rq_friday) count += parseInt(w.rq_friday) || 0;
+        return sum + count;
+      }, 0);
+      
+      statsGrid.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-label">Łącznie RQ Wziętych</div>
+          <div class="stat-value">${totalRQCount}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">RQ w Bieżącym Tygodniu</div>
+          <div class="stat-value">${currentWeekRQCount}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Liczba Członków Zespołu</div>
+          <div class="stat-value">${teamMembers.length}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Liczba Tygodni</div>
+          <div class="stat-value">${allWeeks.length}</div>
+        </div>
+      `;
+      
+      tbody.innerHTML = teamMembers.map(member => {
+        const currentWeekMemberData = currentWeekData.find(w => w.id === member.id);
+        
+        const roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
+        
+        return `
+          <tr>
+            <td>${member.name}</td>
+            <td><span class="role-badge role-${roleClass}">${member.role}</span></td>
+            <td class="editable-cell" data-member="${member.id}" data-day="rq_monday">${currentWeekMemberData?.rq_monday || '-'}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="rq_tuesday">${currentWeekMemberData?.rq_tuesday || '-'}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="rq_wednesday">${currentWeekMemberData?.rq_wednesday || '-'}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="rq_thursday">${currentWeekMemberData?.rq_thursday || '-'}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="rq_friday">${currentWeekMemberData?.rq_friday || '-'}</td>
+            <td class="editable-cell" data-member="${member.id}" data-day="rq_notes" style="min-width: 200px;">${currentWeekMemberData?.rq_notes || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+      
+      document.querySelectorAll('#rq-tbody .editable-cell').forEach(cell => {
+        cell.addEventListener('click', handleRQCellEdit);
+      });
+      
+      renderRQTrendChart();
+    }
+    
+    function renderRQTrendChart() {
+      const svg = document.getElementById('rq-trend-svg');
+      const tooltip = document.getElementById('rq-tooltip');
+      const legend = document.getElementById('rq-legend');
+      const container = document.getElementById('rq-trend-chart');
+      const width = container.clientWidth - 60;
+      const height = 250;
+      
+      const allWeekData = allRecords.filter(r => r.type === 'week_data');
+      
+      const memberRQs = teamMembers.map(member => {
+        const memberWeeks = allWeekData.filter(w => w.id === member.id);
+        let totalRQ = 0;
+        memberWeeks.forEach(data => {
+          if (data.rq_monday) totalRQ += parseInt(data.rq_monday) || 0;
+          if (data.rq_tuesday) totalRQ += parseInt(data.rq_tuesday) || 0;
+          if (data.rq_wednesday) totalRQ += parseInt(data.rq_wednesday) || 0;
+          if (data.rq_thursday) totalRQ += parseInt(data.rq_thursday) || 0;
+          if (data.rq_friday) totalRQ += parseInt(data.rq_friday) || 0;
+        });
+        return { member, totalRQ };
+      }).sort((a, b) => b.totalRQ - a.totalRQ).slice(0, 5);
+      
+      const colors = ['#d4a574', '#4caf50', '#03a9f4', '#e91e63', '#9c27b0'];
+      
+      const weeksToShow = allWeeks.slice(0, 8).reverse();
+      
+      const memberData = memberRQs.map((mr, idx) => {
+        const weeklyRQs = weeksToShow.map(week => {
+          const weekData = allRecords.find(r => 
+            r.type === 'week_data' && 
+            r.id === mr.member.id && 
+            `${r.year}-W${r.week_number}` === week
+          );
+          if (!weekData) return 0;
+          let count = 0;
+          if (weekData.rq_monday) count += parseInt(weekData.rq_monday) || 0;
+          if (weekData.rq_tuesday) count += parseInt(weekData.rq_tuesday) || 0;
+          if (weekData.rq_wednesday) count += parseInt(weekData.rq_wednesday) || 0;
+          if (weekData.rq_thursday) count += parseInt(weekData.rq_thursday) || 0;
+          if (weekData.rq_friday) count += parseInt(weekData.rq_friday) || 0;
+          return count;
+        });
+        
+        return {
+          name: mr.member.name,
+          values: weeklyRQs,
+          color: colors[idx]
+        };
+      });
+      
+      const weekLabels = weeksToShow.map(week => {
+        const [year, weekPart] = week.split('-W');
+        const weekData = allRecords.find(r => r.type === 'week_data' && `${r.year}-W${r.week_number}` === week);
+        
+        if (weekData && weekData.week_start) {
+          const start = new Date(weekData.week_start);
+          const day = start.getDate().toString().padStart(2, '0');
+          const month = (start.getMonth() + 1).toString().padStart(2, '0');
+          return `${day}.${month}`;
+        }
+        return `T${weekPart}`;
+      });
+      
+      const allValues = memberData.flatMap(m => m.values);
+      const maxValue = Math.max(...allValues, 100);
+      const yScale = height / maxValue;
+      const xStep = width / (weeksToShow.length - 1 || 1);
+      
+      let svgContent = '';
+      
+      for (let i = 0; i <= 5; i++) {
+        const y = height - (height / 5 * i);
+        const value = Math.round(maxValue / 5 * i);
+        svgContent += `<line x1="0" y1="${y}" x2="${width}" y2="${y}" class="chart-grid-line"/>`;
+        svgContent += `<text x="-10" y="${y + 4}" class="chart-value-label">${value}</text>`;
+      }
+      
+      svgContent += `<line x1="0" y1="0" x2="0" y2="${height}" class="chart-axis-line"/>`;
+      svgContent += `<line x1="0" y1="${height}" x2="${width}" y2="${height}" class="chart-axis-line"/>`;
+      
+      memberData.forEach(member => {
+        const pathPoints = member.values.map((value, i) => {
+          const x = i * xStep;
+          const y = height - (value * yScale);
+          return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+        }).join(' ');
+        
+        svgContent += `<path d="${pathPoints}" class="chart-line" style="stroke: ${member.color}"/>`;
+        
+        member.values.forEach((value, i) => {
+          const x = i * xStep;
+          const y = height - (value * yScale);
+          svgContent += `<circle cx="${x}" cy="${y}" r="4" class="chart-point" style="fill: ${member.color}; stroke: #252830"
+            onmouseenter="showTooltip(event, '${member.name}: ${value}', 'rq-tooltip')" 
+            onmouseleave="hideTooltip('rq-tooltip')"/>`;
+        });
+      });
+      
+      weekLabels.forEach((label, i) => {
+        const x = i * xStep;
+        svgContent += `<text x="${x}" y="${height + 20}" class="chart-label">${label}</text>`;
+      });
+      
+      svg.innerHTML = svgContent;
+      svg.setAttribute('viewBox', `-40 -20 ${width + 50} ${height + 50}`);
+      
+      legend.innerHTML = memberData.map(member => `
+        <div class="legend-item">
+          <div class="legend-line" style="background: ${member.color}"></div>
+          <span>${member.name}</span>
+        </div>
+      `).join('');
+    }
+    
+    function renderHistoryCharts() {
+      if (allWeeks.length === 0) {
+        document.getElementById('weeks-svg').innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#9aa0a6">Brak historycznych danych</text>';
+        document.getElementById('members-svg').innerHTML = '<text x="50%" y="50%" text-anchor="middle" fill="#9aa0a6">Brak historycznych danych</text>';
+        return;
+      }
+      
+      renderWeeksLineChart();
+      renderMembersLineChart();
+    }
+    
+    function renderWeeksLineChart() {
+      const svg = document.getElementById('weeks-svg');
+      const tooltip = document.getElementById('weeks-tooltip');
+      const container = document.getElementById('weeks-comparison-chart');
+      const width = container.clientWidth - 60;
+      const height = 250;
+      
+      const weeklyData = allWeeks.slice(0, 12).reverse().map(week => {
+        const [year, weekPart] = week.split('-W');
+        const weekData = allRecords.filter(r => r.type === 'week_data' && `${r.year}-W${r.week_number}` === week);
+        const total = weekData.reduce((sum, d) => 
+          sum + (d.monday || 0) + (d.tuesday || 0) + (d.wednesday || 0) + 
+          (d.thursday || 0) + (d.friday || 0) + (d.saturday || 0), 0);
+        
+        let label = `T${weekPart}`;
+        if (weekData.length > 0 && weekData[0].week_start) {
+          const start = new Date(weekData[0].week_start);
+          const day = start.getDate().toString().padStart(2, '0');
+          const month = (start.getMonth() + 1).toString().padStart(2, '0');
+          label = `${day}.${month}`;
+        }
+        
+        return { label, value: total, week };
+      });
+      
+      const maxValue = Math.max(...weeklyData.map(d => d.value), 1);
+      const yScale = height / maxValue;
+      const xStep = width / (weeklyData.length - 1 || 1);
+      
+      let svgContent = '';
+      
+      for (let i = 0; i <= 5; i++) {
+        const y = height - (height / 5 * i);
+        const value = Math.round(maxValue / 5 * i);
+        svgContent += `<line x1="0" y1="${y}" x2="${width}" y2="${y}" class="chart-grid-line"/>`;
+        svgContent += `<text x="-10" y="${y + 4}" class="chart-value-label">${value}</text>`;
+      }
+      
+      svgContent += `<line x1="0" y1="0" x2="0" y2="${height}" class="chart-axis-line"/>`;
+      svgContent += `<line x1="0" y1="${height}" x2="${width}" y2="${height}" class="chart-axis-line"/>`;
+      
+      const pathPoints = weeklyData.map((d, i) => {
+        const x = i * xStep;
+        const y = height - (d.value * yScale);
+        return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+      }).join(' ');
+      
+      svgContent += `<path d="${pathPoints}" class="chart-line"/>`;
+      
+      weeklyData.forEach((d, i) => {
+        const x = i * xStep;
+        const y = height - (d.value * yScale);
+        
+        svgContent += `<circle cx="${x}" cy="${y}" r="5" class="chart-point" 
+          onmouseenter="showTooltip(event, '${d.label}: ${d.value}', 'weeks-tooltip')" 
+          onmouseleave="hideTooltip('weeks-tooltip')"/>`;
+        svgContent += `<text x="${x}" y="${height + 20}" class="chart-label">${d.label}</text>`;
+      });
+      
+      svg.innerHTML = svgContent;
+      svg.setAttribute('viewBox', `-40 -20 ${width + 50} ${height + 50}`);
+    }
+    
+    function renderMembersLineChart() {
+      const svg = document.getElementById('members-svg');
+      const tooltip = document.getElementById('members-tooltip');
+      const legend = document.getElementById('members-legend');
+      const container = document.getElementById('members-history-chart');
+      const width = container.clientWidth - 60;
+      const height = 250;
+      
+      const memberPerformance = teamMembers.map(member => {
+        const memberWeeks = allRecords.filter(r => r.type === 'week_data' && r.id === member.id);
+        const total = memberWeeks.reduce((sum, d) => 
+          sum + (d.monday || 0) + (d.tuesday || 0) + (d.wednesday || 0) + 
+          (d.thursday || 0) + (d.friday || 0) + (d.saturday || 0), 0);
+        return { member, total };
+      }).sort((a, b) => b.total - a.total).slice(0, 5);
+      
+      const colors = ['#d4a574', '#4caf50', '#03a9f4', '#e91e63', '#9c27b0'];
+      
+      const weeksToShow = allWeeks.slice(0, 8).reverse();
+      
+      const memberData = memberPerformance.map((mp, idx) => {
+        const weeklyValues = weeksToShow.map(week => {
+          const weekData = allRecords.find(r => 
+            r.type === 'week_data' && 
+            r.id === mp.member.id && 
+            `${r.year}-W${r.week_number}` === week
+          );
+          return weekData ? 
+            (weekData.monday || 0) + (weekData.tuesday || 0) + (weekData.wednesday || 0) + 
+            (weekData.thursday || 0) + (weekData.friday || 0) + (weekData.saturday || 0) : 0;
+        });
+        
+        return {
+          name: mp.member.name,
+          values: weeklyValues,
+          color: colors[idx]
+        };
+      });
+      
+      const weekLabels = weeksToShow.map(week => {
+        const [year, weekPart] = week.split('-W');
+        const weekData = allRecords.find(r => r.type === 'week_data' && `${r.year}-W${r.week_number}` === week);
+        
+        if (weekData && weekData.week_start) {
+          const start = new Date(weekData.week_start);
+          const day = start.getDate().toString().padStart(2, '0');
+          const month = (start.getMonth() + 1).toString().padStart(2, '0');
+          return `${day}.${month}`;
+        }
+        return `T${weekPart}`;
+      });
+      
+      const allValues = memberData.flatMap(m => m.values);
+      const maxValue = Math.max(...allValues, 1);
+      const yScale = height / maxValue;
+      const xStep = width / (weeksToShow.length - 1 || 1);
+      
+      let svgContent = '';
+      
+      for (let i = 0; i <= 5; i++) {
+        const y = height - (height / 5 * i);
+        const value = Math.round(maxValue / 5 * i);
+        svgContent += `<line x1="0" y1="${y}" x2="${width}" y2="${y}" class="chart-grid-line"/>`;
+        svgContent += `<text x="-10" y="${y + 4}" class="chart-value-label">${value}</text>`;
+      }
+      
+      svgContent += `<line x1="0" y1="0" x2="0" y2="${height}" class="chart-axis-line"/>`;
+      svgContent += `<line x1="0" y1="${height}" x2="${width}" y2="${height}" class="chart-axis-line"/>`;
+      
+      memberData.forEach(member => {
+        const pathPoints = member.values.map((value, i) => {
+          const x = i * xStep;
+          const y = height - (value * yScale);
+          return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+        }).join(' ');
+        
+        svgContent += `<path d="${pathPoints}" class="chart-line" style="stroke: ${member.color}"/>`;
+        
+        member.values.forEach((value, i) => {
+          const x = i * xStep;
+          const y = height - (value * yScale);
+          svgContent += `<circle cx="${x}" cy="${y}" r="4" class="chart-point" style="fill: ${member.color}; stroke: #252830"
+            onmouseenter="showTooltip(event, '${member.name}: ${value}', 'members-tooltip')" 
+            onmouseleave="hideTooltip('members-tooltip')"/>`;
+        });
+      });
+      
+      weekLabels.forEach((label, i) => {
+        const x = i * xStep;
+        svgContent += `<text x="${x}" y="${height + 20}" class="chart-label">${label}</text>`;
+      });
+      
+      svg.innerHTML = svgContent;
+      svg.setAttribute('viewBox', `-40 -20 ${width + 50} ${height + 50}`);
+      
+      legend.innerHTML = memberData.map(member => `
+        <div class="legend-item">
+          <div class="legend-line" style="background: ${member.color}"></div>
+          <span>${member.name}</span>
+        </div>
+      `).join('');
+    }
+    
+    function showTooltip(event, text, tooltipId) {
+      const tooltip = document.getElementById(tooltipId);
+      tooltip.textContent = text;
+      tooltip.style.left = event.pageX + 10 + 'px';
+      tooltip.style.top = event.pageY - 30 + 'px';
+      tooltip.classList.add('visible');
+    }
+    
+    function hideTooltip(tooltipId) {
+      const tooltip = document.getElementById(tooltipId);
+      tooltip.classList.remove('visible');
+    }
+    
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+        
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.view).classList.add('active');
+      });
+    });
+    
+    document.getElementById('prev-week-btn').addEventListener('click', () => {
+      const currentIndex = allWeeks.indexOf(currentWeek);
+      if (currentIndex < allWeeks.length - 1) {
+        currentWeek = allWeeks[currentIndex + 1];
+        const weekData = allRecords.filter(r => r.type === 'week_data' && `${r.year}-W${r.week_number}` === currentWeek);
+        currentWeekData = weekData;
+        updateWeekDisplay();
+        renderPerformanceTable();
+      }
+    });
+    
+    document.getElementById('next-week-btn').addEventListener('click', () => {
+      const currentIndex = allWeeks.indexOf(currentWeek);
+      if (currentIndex > 0) {
+        currentWeek = allWeeks[currentIndex - 1];
+        const weekData = allRecords.filter(r => r.type === 'week_data' && `${r.year}-W${r.week_number}` === currentWeek);
+        currentWeekData = weekData;
+        updateWeekDisplay();
+        renderPerformanceTable();
+      }
+    });
+    
+    document.getElementById('new-week-btn').addEventListener('click', async () => {
+      if (currentRecordCount + teamMembers.length >= MAX_RECORDS) {
+        showNotification('Brak miejsca na nowy tydzień. Maksymalny limit: 999 rekordów.');
+        return;
+      }
+      
+      const btn = document.getElementById('new-week-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span> Tworzenie...';
+      
+      const weekInfo = getCurrentWeekInfo();
+      const newWeek = `${weekInfo.year}-W${weekInfo.weekNumber}`;
+      
+      if (allWeeks.includes(newWeek)) {
+        btn.disabled = false;
+        btn.innerHTML = '✓ Zakończ Tydzień & Nowy';
+        showNotification('Ten tydzień już istnieje.');
+        return;
+      }
+      
+      const createPromises = teamMembers.map(member => {
+        const newWeekData = {
+          id: member.id,
+          type: 'week_data',
+          name: member.name,
+          role: member.role,
+          leader_id: member.leader_id || '',
+          week_start: weekInfo.weekStart,
+          week_number: weekInfo.weekNumber,
+          year: weekInfo.year,
+          goal: 0,
+          monday: 0,
+          tuesday: 0,
+          wednesday: 0,
+          thursday: 0,
+          friday: 0,
+          saturday: 0,
+          rq_monday: '',
+          rq_tuesday: '',
+          rq_wednesday: '',
+          rq_thursday: '',
+          rq_friday: '',
+          rq_notes: '',
+          created_at: new Date().toISOString()
+        };
+        return window.dataSdk.create(newWeekData);
+      });
+      
+      const results = await Promise.all(createPromises);
+      
+      btn.disabled = false;
+      btn.innerHTML = '✓ Zakończ Tydzień & Nowy';
+      
+      if (results.every(r => r.isOk)) {
+        currentWeek = newWeek;
+        showNotification('Nowy tydzień został utworzony!');
+      } else {
+        showNotification('Błąd podczas tworzenia nowego tygodnia.');
+      }
+    });
+    
+    const modal = document.getElementById('add-member-modal');
+    const addMemberBtn = document.getElementById('add-member-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const roleSelect = document.getElementById('member-role');
+    const form = document.getElementById('add-member-form');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    addMemberBtn.addEventListener('click', () => {
+      if (currentRecordCount >= MAX_RECORDS) {
+        showNotification('Osiągnięto maksymalny limit 999 rekordów. Usuń niektóre dane, aby dodać nowych członków.');
+        return;
+      }
+      
+      form.reset();
+      updateSuperiorSelect();
+      modal.classList.add('active');
+    });
+    
+    cancelBtn.addEventListener('click', () => {
+      modal.classList.remove('active');
+      form.reset();
+    });
+    
+    roleSelect.addEventListener('change', () => {
+      updateSuperiorSelect();
+    });
+    
+    function updateSuperiorSelect() {
+      const superiorSelect = document.getElementById('superior-select');
+      
+      superiorSelect.innerHTML = '<option value="">Brak (Top Level)</option>' + 
+        teamMembers.map(superior => 
+          `<option value="${superior.id}">${superior.name} (${superior.role})</option>`
+        ).join('');
+    }
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (currentRecordCount >= MAX_RECORDS) {
+        showNotification('Osiągnięto maksymalny limit 999 rekordów.');
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="loading"></span> Dodawanie...';
+      
+      const memberId = Date.now().toString();
+      const memberName = document.getElementById('member-name').value;
+      const memberRole = document.getElementById('member-role').value;
+      const leaderId = document.getElementById('superior-select').value;
+      
+      const newMember = {
+        id: memberId,
+        type: 'member',
+        name: memberName,
+        role: memberRole,
+        leader_id: leaderId || '',
+        week_start: '',
+        week_number: 0,
+        year: 0,
+        goal: 0,
+        monday: 0,
+        tuesday: 0,
+        wednesday: 0,
+        thursday: 0,
+        friday: 0,
+        saturday: 0,
+        rq_monday: '',
+        rq_tuesday: '',
+        rq_wednesday: '',
+        rq_thursday: '',
+        rq_friday: '',
+        rq_notes: '',
+        created_at: new Date().toISOString()
+      };
+      
+      const result = await window.dataSdk.create(newMember);
+      
+      if (result.isOk) {
+        const changeRecord = {
+          id: `change_${Date.now()}`,
+          type: 'structure_change',
+          action: 'Dodano nowego członka zespołu',
+          details: `${memberName} - ${memberRole}${leaderId ? ` (przełożony: ${teamMembers.find(m => m.id === leaderId)?.name || 'Nieznany'})` : ' (Top Level)'}`,
+          name: '',
+          role: '',
+          leader_id: '',
+          week_start: '',
+          week_number: 0,
+          year: 0,
+          goal: 0,
+          monday: 0,
+          tuesday: 0,
+          wednesday: 0,
+          thursday: 0,
+          friday: 0,
+          saturday: 0,
+          rq_monday: '',
+          rq_tuesday: '',
+          rq_wednesday: '',
+          rq_thursday: '',
+          rq_friday: '',
+          rq_notes: '',
+          timestamp: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        };
+        
+        await window.dataSdk.create(changeRecord);
+        
+        modal.classList.remove('active');
+        form.reset();
+        showNotification('Członek zespołu został dodany!');
+      } else {
+        showNotification('Nie udało się dodać członka zespołu. Spróbuj ponownie.');
+      }
+      
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Dodaj';
+    });
+    
+    async function handleDelete(e) {
+      const memberId = e.target.dataset.id;
+      const member = teamMembers.find(m => m.__backendId === memberId);
+      
+      if (!member) return;
+      
+      const btn = e.target;
+      const originalText = btn.textContent;
+      
+      if (btn.textContent === 'Usuń') {
+        btn.textContent = 'Potwierdź?';
+        btn.style.background = 'rgba(244, 67, 54, 0.3)';
+        
+        setTimeout(() => {
+          if (btn.textContent === 'Potwierdź?') {
+            btn.textContent = originalText;
+            btn.style.background = '';
+          }
+        }, 3000);
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loading"></span>';
+      
+      const result = await window.dataSdk.delete(member);
+      
+      if (!result.isOk) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        showNotification('Nie udało się usunąć członka zespołu.');
+      } else {
+        const changeRecord = {
+          id: `change_${Date.now()}`,
+          type: 'structure_change',
+          action: 'Usunięto członka zespołu',
+          details: `${member.name} - ${member.role}`,
+          name: '',
+          role: '',
+          leader_id: '',
+          week_start: '',
+          week_number: 0,
+          year: 0,
+          goal: 0,
+          monday: 0,
+          tuesday: 0,
+          wednesday: 0,
+          thursday: 0,
+          friday: 0,
+          saturday: 0,
+          rq_monday: '',
+          rq_tuesday: '',
+          rq_wednesday: '',
+          rq_thursday: '',
+          rq_friday: '',
+          rq_notes: '',
+          timestamp: new Date().toISOString(),
+          created_at: new Date().toISOString()
+        };
+        
+        await window.dataSdk.create(changeRecord);
+        
+        showNotification('Członek zespołu został usunięty.');
+      }
+    }
+    
+    function showNotification(message) {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.remove();
+      }, 4000);
+    }
+    
+    document.getElementById('save-rq-btn').addEventListener('click', () => {
+      showNotification('Wszystkie dane są automatycznie zapisywane w Canva Sheet! 💾');
+    });
+    
+    document.getElementById('close-stats-btn').addEventListener('click', () => {
+      document.getElementById('member-stats-modal').classList.remove('active');
+    });
+    
+    let currentStatsMemberId = null;
+    let currentStatsWeek = null;
+    let memberWeeksAvailable = [];
+    
+    function openMemberStats(memberId) {
+      const member = teamMembers.find(m => m.id === memberId);
+      if (!member) return;
+      
+      currentStatsMemberId = memberId;
+      const memberWeekData = allRecords.filter(r => r.type === 'week_data' && r.id === memberId);
+      
+      memberWeeksAvailable = [...new Set(memberWeekData.map(w => `${w.year}-W${w.week_number}`))].sort().reverse();
+      
+      if (memberWeeksAvailable.length > 0) {
+        currentStatsWeek = memberWeeksAvailable[0];
+      } else {
+        currentStatsWeek = currentWeek;
+      }
+      
+      const totalZatrudnieni = memberWeekData.reduce((sum, w) => 
+        sum + (w.monday || 0) + (w.tuesday || 0) + (w.wednesday || 0) + 
+        (w.thursday || 0) + (w.friday || 0) + (w.saturday || 0), 0);
+      
+      const totalRQ = memberWeekData.reduce((sum, w) => {
+        let count = 0;
+        if (w.rq_monday) count += parseInt(w.rq_monday) || 0;
+        if (w.rq_tuesday) count += parseInt(w.rq_tuesday) || 0;
+        if (w.rq_wednesday) count += parseInt(w.rq_wednesday) || 0;
+        if (w.rq_thursday) count += parseInt(w.rq_thursday) || 0;
+        if (w.rq_friday) count += parseInt(w.rq_friday) || 0;
+        return sum + count;
+      }, 0);
+      
+      document.getElementById('stats-member-name').textContent = `Statystyki: ${member.name}`;
+      document.getElementById('stats-role').textContent = member.role;
+      document.getElementById('stats-total-zatrudnieni').textContent = totalZatrudnieni;
+      document.getElementById('stats-total-rq').textContent = totalRQ;
+      document.getElementById('stats-weeks-count').textContent = memberWeekData.length;
+      
+      updateStatsWeekDisplay();
+      renderMemberStatsTable();
+      
+      document.getElementById('member-stats-modal').classList.add('active');
+    }
+    
+    function updateStatsWeekDisplay() {
+      if (!currentStatsWeek) return;
+      
+      const [year, weekPart] = currentStatsWeek.split('-W');
+      const weekNumber = parseInt(weekPart);
+      
+      const weekData = allRecords.find(r => 
+        r.type === 'week_data' && 
+        r.year === parseInt(year) && 
+        r.week_number === weekNumber
+      );
+      
+      if (weekData && weekData.week_start) {
+        const start = new Date(weekData.week_start);
+        const end = new Date(start);
+        end.setDate(end.getDate() + 5);
+        
+        const formatDate = (date) => {
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
+          return `${day}.${month}`;
+        };
+        
+        document.getElementById('stats-week-display').textContent = `${formatDate(start)} - ${formatDate(end)}`;
+      } else {
+        document.getElementById('stats-week-display').textContent = `Tydzień ${weekNumber}, ${year}`;
+      }
+      
+      const currentIndex = memberWeeksAvailable.indexOf(currentStatsWeek);
+      document.getElementById('stats-prev-week-btn').disabled = currentIndex === memberWeeksAvailable.length - 1 || memberWeeksAvailable.length === 0;
+      document.getElementById('stats-next-week-btn').disabled = currentIndex === 0 || memberWeeksAvailable.length === 0;
+    }
+    
+    function renderMemberStatsTable() {
+      if (!currentStatsMemberId || !currentStatsWeek) return;
+      
+      const weekData = allRecords.find(r => 
+        r.type === 'week_data' && 
+        r.id === currentStatsMemberId && 
+        `${r.year}-W${r.week_number}` === currentStatsWeek
+      );
+      
+      const performanceTbody = document.getElementById('stats-performance-tbody');
+      const rqTbody = document.getElementById('stats-rq-tbody');
+      
+      if (!weekData) {
+        performanceTbody.innerHTML = '<tr><td colspan="8" class="empty-state"><p>Brak danych dla tego tygodnia</p></td></tr>';
+        rqTbody.innerHTML = '<tr><td colspan="6" class="empty-state"><p>Brak danych dla tego tygodnia</p></td></tr>';
+        return;
+      }
+      
+      const suma = (weekData.monday || 0) + (weekData.tuesday || 0) + (weekData.wednesday || 0) + 
+                   (weekData.thursday || 0) + (weekData.friday || 0) + (weekData.saturday || 0);
+      
+      performanceTbody.innerHTML = `
+        <tr>
+          <td class="metric-value">${weekData.goal || 0}</td>
+          <td class="metric-value">${weekData.monday || 0}</td>
+          <td class="metric-value">${weekData.tuesday || 0}</td>
+          <td class="metric-value">${weekData.wednesday || 0}</td>
+          <td class="metric-value">${weekData.thursday || 0}</td>
+          <td class="metric-value">${weekData.friday || 0}</td>
+          <td class="metric-value">${weekData.saturday || 0}</td>
+          <td class="metric-value metric-avg">${suma}</td>
+        </tr>
+      `;
+      
+      rqTbody.innerHTML = `
+        <tr>
+          <td>${weekData.rq_monday || '-'}</td>
+          <td>${weekData.rq_tuesday || '-'}</td>
+          <td>${weekData.rq_wednesday || '-'}</td>
+          <td>${weekData.rq_thursday || '-'}</td>
+          <td>${weekData.rq_friday || '-'}</td>
+          <td style="min-width: 200px;">${weekData.rq_notes || '-'}</td>
+        </tr>
+      `;
+    }
+    
+    document.getElementById('stats-prev-week-btn').addEventListener('click', () => {
+      const currentIndex = memberWeeksAvailable.indexOf(currentStatsWeek);
+      if (currentIndex < memberWeeksAvailable.length - 1) {
+        currentStatsWeek = memberWeeksAvailable[currentIndex + 1];
+        updateStatsWeekDisplay();
+        renderMemberStatsTable();
+      }
+    });
+    
+    document.getElementById('stats-next-week-btn').addEventListener('click', () => {
+      const currentIndex = memberWeeksAvailable.indexOf(currentStatsWeek);
+      if (currentIndex > 0) {
+        currentStatsWeek = memberWeeksAvailable[currentIndex - 1];
+        updateStatsWeekDisplay();
+        renderMemberStatsTable();
+      }
+    });
+    
+    initializeApp();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a4c3dbfc2e73534',t:'MTc2NDE5MDA0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

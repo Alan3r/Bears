@@ -1,0 +1,28 @@
+:root{
+  --bg:#1f2124;
+  --panel:#242629;
+  --muted:#9aa0a6;
+  --accent:#d4af37;
+  --accent-2:#b8860b;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#171718);color:#e6e6e6}
+.dashboard-container{max-width:1200px;margin:28px auto;padding:20px}
+.header{display:flex;align-items:center;gap:20px;justify-content:space-between}
+.header-left h1{font-weight:700;letter-spacing:2px;color:var(--accent)}
+.navigation{display:flex;gap:8px}
+.nav-btn{background:transparent;border:1px solid transparent;color:var(--muted);padding:8px 14px;border-radius:10px;cursor:pointer}
+.nav-btn.active{background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));border-color:rgba(255,255,255,0.04);color:var(--accent)}
+.add-member-btn{background:linear-gradient(180deg,var(--accent),var(--accent-2));color:#111;padding:10px 14px;border-radius:999px;border:none;cursor:pointer}
+.view-container{display:none}
+.view-container.active{display:block}
+.week-controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;background:var(--panel);padding:12px;border-radius:12px}
+.week-info .week-label{color:var(--muted);text-transform:uppercase;font-size:12px}
+.week-display{font-weight:700;color:var(--accent)}
+.performance-table{background:var(--panel);border-radius:12px;overflow:auto;padding:12px}
+table{width:100%;border-collapse:collapse}
+th{color:var(--accent);font-weight:700;padding:12px;text-transform:uppercase;font-size:12px}
+.tbody td{padding:10px}
+.member-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:12px;border-radius:10px;min-width:180px}
+.org-chart{padding:20px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
